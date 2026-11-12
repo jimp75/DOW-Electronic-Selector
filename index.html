@@ -4,6 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Dow Electronics Materials Selector</title>
+<link rel="icon" type="image/svg+xml" href="favicon.svg">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Sans+Condensed:wght@500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
@@ -208,6 +209,7 @@ table.spec{width:100%;border-collapse:collapse;min-width:900px}
 footer{max-width:1360px;margin:0 auto;padding:0 24px 40px;color:var(--muted);font-size:12px;line-height:1.6}
 footer p{max-width:110ch;margin:0}
 footer a{color:var(--accent)}
+footer p.made{margin-top:14px;font-size:11.5px}
 .sources{border-top:1px solid var(--line);padding-top:18px;margin-bottom:16px}
 .sources h2{font-family:var(--f-display);font-weight:600;font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-2);margin:0 0 8px}
 .sources ol{margin:0;padding-left:20px;display:flex;flex-direction:column;gap:4px;font-size:12.5px}
@@ -225,7 +227,6 @@ footer a{color:var(--accent)}
       <p class="sub">Search Dow's electronics catalogue of DOWSIL™, SYLGARD™ and SILASTIC™ silicones, thermal materials, heat transfer fluids and surface-prep products. Filter by function, cure, thermal conductivity and Dow submarket, then compare candidates side by side.</p>
     </div>
     <div class="mast-right">
-    <p class="upd-note">Updated automatically once a month</p>
     <svg class="logo" role="img" aria-label="DGE Specialty Chemicals" viewBox="0 0 555 161" fill="none" xmlns="http://www.w3.org/2000/svg">
 <path d="M278.737 89.2611C285.3 83.1228 288.577 74.1841 288.566 62.4448C288.556 50.7056 285.28 41.6841 278.737 35.3804C272.195 29.0665 262.149 25.9095 248.599 25.9095H233.654V98.4841H250.568C262.753 98.4841 272.117 95.384 278.66 89.1836M298.225 18.2366C309.594 28.6531 315.279 43.1205 315.279 61.6387C315.279 80.157 309.729 94.8466 298.628 105.707C287.538 116.61 270.608 122.061 247.839 122.061H207.019V2.70483H249.281C270.572 2.70483 286.913 7.91307 298.303 18.3296" fill="currentColor"/>
 <path d="M415.899 61.2529H442.72V103.617C430.876 116.823 414.458 123.427 393.466 123.427C375.895 123.427 361.178 117.619 349.312 106.004C337.447 94.3884 331.52 79.7505 331.53 62.09C331.53 44.3881 337.592 29.6159 349.715 17.7733C355.464 12.0139 362.315 7.47238 369.859 4.42022C377.402 1.36806 385.484 -0.132099 393.621 0.00939827C410.117 -0.227363 426.085 5.81855 438.286 16.9207L424.473 36.8392C420.124 32.8149 415.13 29.5504 409.698 27.1822C405.038 25.3979 400.084 24.504 395.094 24.5471C390.348 24.4407 385.629 25.3011 381.226 27.0759C376.823 28.8507 372.828 31.5027 369.482 34.8706C362.537 41.7736 359.064 50.8571 359.064 62.1209C359.064 73.3848 362.392 82.4063 369.048 89.1853C372.103 92.4196 375.795 94.9871 379.89 96.7263C383.986 98.4656 388.397 99.3391 392.846 99.2918C402.076 99.2918 409.76 97.5299 415.899 94.006V61.2529Z" fill="currentColor"/>
@@ -264,7 +265,7 @@ footer a{color:var(--accent)}
   <div class="toolbar-in">
     <label class="search" for="q">
       <svg viewBox="0 0 24 24" fill="none" stroke-width="2" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
-      <input type="search" id="q" list="feat-list" autocomplete="off" placeholder="Search part numbers, applications or properties, also inside data sheets: shore, hardness, primerless, k>5…" aria-label="Search products by part number, application or property" aria-describedby="q-help">
+      <input type="search" id="q" list="feat-list" autocomplete="off" placeholder="Search part numbers, properties or words in data sheets: shore, k>5…" aria-label="Search products by part number, application or property">
       <datalist id="feat-list"></datalist>
     </label>
     <label class="docs-opt" for="indocs" id="docs-opt" hidden title="Also look for your words inside Dow's technical data sheets (hardness, Shore, viscosity, standards...)"><input type="checkbox" id="indocs" checked> Search inside data sheets <span id="docs-n"></span></label>
@@ -278,21 +279,7 @@ footer a{color:var(--accent)}
       <button type="button" id="v-table" aria-pressed="true">Table</button>
       <button type="button" id="v-cards" aria-pressed="false">Cards</button>
     </div>
-    <div class="try" id="q-help">
-      <span class="try-l">Try</span>
-      <button type="button" data-try="primerless">primerless</button>
-      <button type="button" data-try="UL">UL</button>
-      <button type="button" data-try="MIL">MIL</button>
-      <button type="button" data-try="transparent">transparent</button>
-      <button type="button" data-try="solvent-free">solvent-free</button>
-      <button type="button" data-try="reworkable">reworkable</button>
-      <button type="button" data-try="flame">flame resistant</button>
-      <button type="button" data-try="FIPG">FIPG</button>
-      <button type="button" data-try="EMI">EMI shielding</button>
-      <button type="button" data-try="k>5">k&gt;5</button>
-      <button type="button" data-try="immersion">immersion cooling</button>
-      <span class="try-note">Combine words to narrow: <kbd>potting EV</kbd>, <kbd>black high strength</kbd>, <kbd>gel k&gt;4</kbd></span>
-    </div>
+    
   </div>
 </div>
 
@@ -323,6 +310,7 @@ footer a{color:var(--accent)}
     </ol>
   </div>
   <p>Unofficial selector compiled from the public Dow pages listed above and re-checked automatically every month. Values are typical and for preliminary screening only; they are not specifications. Confirm all properties against the current technical data sheet and consult Dow before qualification. DOWSIL™ and SYLGARD™ are trademarks of The Dow Chemical Company.</p>
+  <p class="made">Updated automatically once a month<br>Made by Pedro Jesus - 2026</p>
 </footer>
 
 <div class="scrim" id="scrim"></div>
