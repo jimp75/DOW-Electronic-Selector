@@ -8,6 +8,7 @@ import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import vm from "node:vm";
+import { extractSpecs } from "./specs.mjs";
 
 const PRODUCTS = new URL("../products.js", import.meta.url);
 const OUT = new URL("../docs.js", import.meta.url);
@@ -76,7 +77,8 @@ async function worker() {
       if (!links.length) { none.push(p.n); if (prev[k]) docs[k] = prev[k]; continue; }
       const parts = []; for (const l of links) { const t = await pdfText(page, l.h); if (t) parts.push(t); }
       if (!parts.length) throw new Error("PDF could not be read");
-      docs[k] = { pdf: links[0].h, t: parts.join(" ").slice(0, MAX_CHARS) }; ok++;
+      const text = parts.join(" ");
+      docs[k] = { pdf: links[0].h, s: extractSpecs(text), t: text.slice(0, MAX_CHARS) }; ok++;
     } catch (e) { failed.push(`${p.n}: ${e.message}`); if (prev[k]) docs[k] = prev[k]; }
   }
   await page.close();
