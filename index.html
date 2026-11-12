@@ -168,6 +168,7 @@ table.spec{width:100%;border-collapse:collapse;min-width:900px}
 .card .cb input{margin:0}
 
 .tds{display:inline-block;margin-top:6px;font-size:12px;font-weight:500;color:var(--accent);text-decoration:none;border:1px solid var(--accent);border-radius:4px;padding:1px 7px}
+.tds.sds{margin-left:6px}
 .tds:hover{background:var(--accent);color:var(--accent-ink)}
 .card-links{display:flex;gap:6px;flex-wrap:wrap}
 .empty{padding:48px 24px;text-align:center;color:var(--ink-2);background:var(--surface);border:1px dashed var(--line-strong);border-radius:8px}
@@ -392,7 +393,10 @@ const kTxt=k=>k==null?"—":k.toFixed(1);
 const cureTxt=p=>p.cureAlt?`${p.cure} / ${p.cureAlt}`:p.cure;
 const partsTxt=p=>p.parts==="1K"?"1K":p.parts==="2K"?"2K":"—";
 const tdsUrl=p=>{if(DOCS[p.dk]&&DOCS[p.dk].pdf)return DOCS[p.dk].pdf;const m=/\/pdp\.[^/]*\.([0-9a-z]+)\.html/i.exec(p.u||"");return m?`https://www.dow.com/en-us/search.html#f-dow_prelatedproduct=${m[1]}&tab=Support&cf-dow_contenttype_hierarchy=Technical%20Data%20Sheet`:null;};
-const tdsLink=(p,cls)=>{const t=tdsUrl(p);return t?`<a class="${cls}" href="${t}" target="_blank" rel="noopener" title="Technical data sheet for ${esc(p.n)} on dow.com">TDS ↗</a>`:"";};
+/* Dow keeps safety data sheets in its own SDS Finder; this link opens the finder already searched for the product. */
+const sdsUrl=p=>"https://www.dow.com/en-us/support/sds-finder.html#q="+encodeURIComponent(p.pn.replace(/[™®]/g,""));
+const sdsLink=(p,cls)=>`<a class="${cls}" href="${sdsUrl(p)}" target="_blank" rel="noopener" title="Safety data sheet for ${esc(p.n)}: opens Dow's SDS Finder with this product searched">SDS ↗</a>`;
+const tdsLink=(p,cls)=>{const t=tdsUrl(p);return (t?`<a class="${cls}" href="${t}" target="_blank" rel="noopener" title="Technical data sheet for ${esc(p.n)} on dow.com">TDS ↗</a>`:"")+sdsLink(p,cls+" sds");};
 const sw=fn=>`<span class="sw" style="background:var(${FN[fn].c})"></span>`;
 const X='<svg viewBox="0 0 24 24" fill="none" stroke-width="2.4" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg>';
 
@@ -425,8 +429,15 @@ document.querySelectorAll("[data-try]").forEach(b=>b.addEventListener("click",()
 function buildFeatList(){$("feat-list").innerHTML=[...new Set(P.flatMap(p=>p.f))].sort((a,b)=>a.localeCompare(b)).map(f=>`<option value="${esc(f)}"></option>`).join("");}
 buildFeatList();
 $("indocs").addEventListener("change",e=>{S.docs=e.target.checked;render();});
+/* Complete cards from the data sheets: values Dow's product page leaves out but the TDS states (conductivity, 1K/2K, cure, hardness). */
+function applySpecs(){let ch=false;P.forEach(p=>{const s=DOCS[p.dk]&&DOCS[p.dk].s;if(!s)return;
+  if(p.k==null&&s.k!=null){p.k=s.k;ch=true;}
+  if(p.parts==="Not stated"&&s.parts){p.parts=s.parts;ch=true;}
+  if(p.cure==="Not stated"&&s.cure){p.cure=s.cure;ch=true;}
+  if(!p.hard&&s.hard){p.hard=s.hard;ch=true;}});
+  if(ch){KMAX=Math.max(1,...P.map(p=>p.k||0));P.forEach(p=>p.ix=null);}}
 (function loadDocs(){const sc=document.createElement("script");sc.src="docs.js";
-  sc.onload=()=>{DOCS=(window.DOW_DOCS&&window.DOW_DOCS.docs)||{};const n=Object.keys(DOCS).length;
+  sc.onload=()=>{DOCS=(window.DOW_DOCS&&window.DOW_DOCS.docs)||{};const n=Object.keys(DOCS).length;applySpecs();
     if(n){$("docs-opt").hidden=false;$("docs-n").textContent="("+n+" sheets)";render();}};
   document.head.appendChild(sc);})();
 $("sort").addEventListener("change",e=>{S.sort=e.target.value;render();});
@@ -554,7 +565,7 @@ function openDetail(p){
       <table class="kv"><tbody>${rowsFor(p).filter(r=>r[1]!==null).map(([a,b])=>`<tr><th scope="row">${a}</th><td>${b}</td></tr>`).join("")}</tbody></table>
       <p class="muted" style="font-size:12px;margin-top:14px">Typical values from Dow's public product pages. Confirm on the current TDS.</p></div>
     <div class="dr-foot"><button class="btn" type="button" id="dr-cmp" ${!inCmp&&cmp.size>=3?"disabled":""}>${inCmp?"Remove from comparison":"Add to comparison"}</button>
-      ${tdsUrl(p)?`<a class="btn primary" href="${tdsUrl(p)}" target="_blank" rel="noopener">Technical data sheet ↗</a>`:""}<a class="btn${tdsUrl(p)?"":" primary"}" href="${p.u}" target="_blank" rel="noopener">Product page ↗</a></div>`);
+      ${tdsUrl(p)?`<a class="btn primary" href="${tdsUrl(p)}" target="_blank" rel="noopener">Technical data sheet ↗</a>`:""}<a class="btn" href="${sdsUrl(p)}" target="_blank" rel="noopener">Safety data sheet ↗</a><a class="btn${tdsUrl(p)?"":" primary"}" href="${p.u}" target="_blank" rel="noopener">Product page ↗</a></div>`);
   $("dr-cmp").onclick=()=>{inCmp?cmp.delete(p.i):cmp.add(p.i);render();openDetail(p);};
 }
 
@@ -579,7 +590,7 @@ function openCompare(){
   openDrawer(`<div class="dr-head"><div><span class="brand">Side-by-side</span><h2 id="dr-title">Compare ${ps.length} products</h2></div>${closeBtn}</div>
     <div class="dr-body" style="overflow:auto"><table class="cmp"><thead><tr><th></th>${ps.map(p=>`<th scope="col"><span class="brand">${esc(p.brand)}</span>${esc(p.pn)}</th>`).join("")}</tr></thead>
     <tbody>${attrs.map(([l,f,best])=>`<tr><th scope="row">${l}</th>${ps.map(p=>`<td class="${best&&best(p)?"best":""}">${f(p)}</td>`).join("")}</tr>`).join("")}</tbody></table></div>
-    <div class="dr-foot">${ps.map(p=>tdsUrl(p)?`<a class="btn" href="${tdsUrl(p)}" target="_blank" rel="noopener">${esc(p.pn.split(" ")[0])} TDS ↗</a>`:`<a class="btn" href="${p.u}" target="_blank" rel="noopener">${esc(p.pn.split(" ")[0])} on dow.com ↗</a>`).join("")}</div>`,true);
+    <div class="dr-foot">${ps.map(p=>(tdsUrl(p)?`<a class="btn" href="${tdsUrl(p)}" target="_blank" rel="noopener">${esc(p.pn.split(" ")[0])} TDS ↗</a>`:`<a class="btn" href="${p.u}" target="_blank" rel="noopener">${esc(p.pn.split(" ")[0])} on dow.com ↗</a>`)+`<a class="btn" href="${sdsUrl(p)}" target="_blank" rel="noopener">${esc(p.pn.split(" ")[0])} SDS ↗</a>`).join("")}</div>`,true);
 }
 
 

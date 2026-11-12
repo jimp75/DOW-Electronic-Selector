@@ -19,6 +19,9 @@ A public, self-updating product selector for Dow's electronics materials (DOWSIL
 - Besides Dow's Electronics market listing, `refresh.mjs` reads the "Conductive Materials" product-technology listing (finds e.g. TC-8540, EC-6484).
 - `extras.json` lists products Dow publishes but shows in no listing the script can read (e.g. TC-5622). Add an entry (name, product page link, short description) and they are kept at every refresh.
 
+## Safety data sheets
+- Each product has an SDS button next to TDS. Dow keeps safety data sheets in its SDS Finder, so the button opens `https://www.dow.com/en-us/support/sds-finder.html#q=<product name>` with the product already searched; the product is the first result.
+
 ## Scope
 Included: thermal management, protection, bonding & sealing, electrical conduction, surface preparation & cleaning, heat transfer & fluids. Process chemicals and polymers/rubbers/additives are excluded on purpose.
 
