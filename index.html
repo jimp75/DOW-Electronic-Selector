@@ -1,0 +1,603 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Dow Electronics Materials Selector</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Sans+Condensed:wght@500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+/* Layout idea: technical catalogue. Masthead → toolbar → facet column | spec table, detail drawer on the right, compare tray at the bottom. */
+:root{
+  --bg:#f4f6f8; --surface:#ffffff; --surface-2:#f9fafb; --ink:#14202b; --ink-2:#3c4a57; --muted:#6b7886;
+  --line:#dde2e7; --line-strong:#c6cdd4;
+  --accent:#1f4e79; --accent-ink:#ffffff; --accent-soft:#e6eef6; --focus:#2f7fd0;
+  --mast:#14202b; --mast-ink:#e9eef3; --mast-muted:#9fb0c0;
+  --c-thermal:#b4532a; --c-protection:#2f7d5b; --c-assembly:#4b5bb5; --c-conductive:#9a7400; --c-prep:#7c6f64; --c-fluids:#1f7a8c; --c-polymers:#8a4f7d; --c-process:#5f6b2e;
+  --bar:#b4532a; --bar-track:#eef1f4;
+  --shadow:0 12px 40px rgba(16,28,40,.16);
+  --f-display:"IBM Plex Sans Condensed","Arial Narrow",system-ui,sans-serif;
+  --f-body:"IBM Plex Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --f-mono:"IBM Plex Mono",ui-monospace,"SFMono-Regular",Menlo,monospace;
+  color-scheme:light;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#0e141a; --surface:#151d25; --surface-2:#19222b; --ink:#e4eaf0; --ink-2:#bcc7d2; --muted:#8a98a6;
+    --line:#26313c; --line-strong:#34414e;
+    --accent:#6aa6dc; --accent-ink:#0b1622; --accent-soft:#1a2b3c; --focus:#7db7ee;
+    --mast:#0a0f14; --mast-ink:#e4eaf0; --mast-muted:#7f91a3;
+    --c-thermal:#e08a5e; --c-protection:#62b98f; --c-assembly:#93a0ec; --c-conductive:#d9b44a; --c-prep:#b8aa9c; --c-fluids:#5fc1d3; --c-polymers:#d08cc0; --c-process:#b3c070;
+    --bar:#e08a5e; --bar-track:#222c36; --shadow:0 12px 40px rgba(0,0,0,.5);
+    color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0e141a; --surface:#151d25; --surface-2:#19222b; --ink:#e4eaf0; --ink-2:#bcc7d2; --muted:#8a98a6;
+  --line:#26313c; --line-strong:#34414e;
+  --accent:#6aa6dc; --accent-ink:#0b1622; --accent-soft:#1a2b3c; --focus:#7db7ee;
+  --mast:#0a0f14; --mast-ink:#e4eaf0; --mast-muted:#7f91a3;
+  --c-thermal:#e08a5e; --c-protection:#62b98f; --c-assembly:#93a0ec; --c-conductive:#d9b44a; --c-prep:#b8aa9c; --c-fluids:#5fc1d3; --c-polymers:#d08cc0; --c-process:#b3c070;
+  --bar:#e08a5e; --bar-track:#222c36; --shadow:0 12px 40px rgba(0,0,0,.5);
+  color-scheme:dark;
+}
+
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:14px;line-height:1.5;-webkit-font-smoothing:antialiased}
+button,input,select{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--focus);outline-offset:2px}
+@media (prefers-reduced-motion: reduce){*{transition:none!important;animation:none!important}}
+
+/* Masthead */
+.mast{background:var(--mast);color:var(--mast-ink)}
+.mast-in{max-width:1360px;margin:0 auto;padding:22px 24px 20px;display:flex;justify-content:space-between;align-items:flex-end;gap:24px;flex-wrap:wrap}
+.eyebrow{font-family:var(--f-mono);font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--mast-muted);margin:0 0 6px}
+h1{font-family:var(--f-display);font-weight:600;font-size:28px;line-height:1.15;margin:0;letter-spacing:-.005em;text-wrap:balance}
+.mast p.sub{margin:6px 0 0;color:var(--mast-muted);max-width:62ch;font-size:13.5px}
+.stats{display:flex;gap:28px}
+.upd-note{margin:0 0 -8px;font-size:11px;letter-spacing:.02em;color:var(--mast-muted)}
+.mast-right{display:flex;flex-direction:column;align-items:flex-end;gap:18px}
+.logo{height:46px;width:auto;color:#ffffff;display:block}
+@media (max-width:700px){.mast-right{align-items:flex-start}.logo{height:38px}}
+.stale{max-width:1360px;margin:14px auto 0;padding:10px 16px;display:flex;align-items:center;justify-content:space-between;gap:12px;background:var(--accent-soft);border:1px solid var(--accent);border-radius:8px;font-size:13.5px}
+.stale[hidden]{display:none}
+.stat[hidden]{display:none!important}
+.stat{display:flex;flex-direction:column;gap:2px;min-width:70px}
+.stat b{font-family:var(--f-mono);font-weight:500;font-size:20px;font-variant-numeric:tabular-nums}
+.stat span{font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--mast-muted)}
+
+/* Toolbar */
+.toolbar{background:var(--surface);border-bottom:1px solid var(--line);position:sticky;top:0;z-index:5}
+.toolbar-in{max-width:1360px;margin:0 auto;padding:10px 24px;display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+.search{flex:1 1 280px;position:relative}
+.search input{width:100%;height:36px;padding:0 12px 0 34px;border:1px solid var(--line-strong);border-radius:6px;background:var(--surface-2)}
+.search svg{position:absolute;left:11px;top:10px;width:16px;height:16px;stroke:var(--muted)}
+.seg{display:inline-flex;border:1px solid var(--line-strong);border-radius:6px;overflow:hidden}
+.seg button{height:34px;padding:0 12px;border:0;background:transparent;cursor:pointer;color:var(--ink-2);font-size:13px}
+.seg button+button{border-left:1px solid var(--line-strong)}
+.seg button[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink)}
+.toolbar select{height:36px;padding:0 10px;border:1px solid var(--line-strong);border-radius:6px;background:var(--surface);font-size:13px}
+.tl-label{font-size:12px;color:var(--muted)}
+.try{flex:1 1 100%;display:flex;flex-wrap:wrap;align-items:center;gap:6px;padding-top:2px}
+.try-l{font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin-right:2px}
+.try button{height:24px;padding:0 9px;border:1px solid var(--line-strong);border-radius:12px;background:transparent;font-size:12px;color:var(--ink-2);cursor:pointer}
+.try button:hover{border-color:var(--accent);color:var(--accent)}
+.try-note{font-size:12px;color:var(--muted);margin-left:auto}
+kbd{font-family:var(--f-mono);font-size:11px;padding:1px 5px;border:1px solid var(--line-strong);border-radius:3px;background:var(--surface-2)}
+.docs-opt{display:flex;align-items:center;gap:6px;font-size:12.5px;color:var(--muted);white-space:nowrap;cursor:pointer}
+.docs-opt input{accent-color:var(--accent)}
+.dochit{display:block;margin-top:6px;font-size:12px;line-height:1.45;color:var(--muted);max-width:60ch}
+.dochit b{font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;font-weight:600;margin-right:4px}
+.dochit mark{background:var(--accent-soft);color:var(--ink);border-radius:2px;padding:0 2px}
+.hits{display:flex;flex-wrap:wrap;align-items:center;gap:4px;margin-top:6px}
+.hits-l{font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin-right:2px}
+mark.ft{background:var(--accent-soft);color:var(--ink);border:1px solid var(--accent);border-radius:3px;padding:0 6px;font-size:11.5px}
+@media (max-width:700px){.try-note{display:none}}
+
+/* Body */
+.body{max-width:1360px;margin:0 auto;padding:20px 24px 110px;display:grid;grid-template-columns:250px minmax(0,1fr);gap:24px}
+@media (max-width:900px){.body{grid-template-columns:1fr}}
+
+/* Facets */
+.facets{display:flex;flex-direction:column;gap:4px;align-self:start;position:sticky;top:104px;max-height:calc(100vh - 120px);overflow:auto;padding-right:4px}
+@media (max-width:900px){.facets{position:static;max-height:none}}
+.facet{border-bottom:1px solid var(--line);padding:12px 0}
+.facet:first-child{padding-top:0}
+.facet h3{margin:0 0 8px;font-family:var(--f-display);font-weight:600;font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-2)}
+.opt{display:flex;align-items:center;gap:8px;padding:3px 0;cursor:pointer;font-size:13.5px;color:var(--ink)}
+.opt input{width:15px;height:15px;margin:0;accent-color:var(--accent);flex:none}
+.opt .lbl{flex:1;display:flex;align-items:center;gap:7px}
+.opt .n{font-family:var(--f-mono);font-size:11.5px;color:var(--muted);font-variant-numeric:tabular-nums}
+.opt.zero{color:var(--muted);opacity:.55}
+.sw{width:9px;height:9px;border-radius:2px;flex:none}
+.range-row{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:6px}
+.range-row output{font-family:var(--f-mono);font-size:12.5px;color:var(--accent)}
+input[type=range]{width:100%;accent-color:var(--accent)}
+.ticks{display:flex;justify-content:space-between;font-family:var(--f-mono);font-size:10.5px;color:var(--muted)}
+.facet.collapsed .opt.more:not(:has(input:checked)){display:none}
+.more-btn{margin-top:6px;font-size:12.5px}
+.linkbtn{background:none;border:0;padding:0;color:var(--accent);cursor:pointer;font-size:13px;text-decoration:underline;text-underline-offset:2px}
+
+/* Results header */
+.res-head{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:10px;min-height:30px}
+.count{font-size:13.5px;color:var(--ink-2)}
+.count b{font-family:var(--f-mono);font-weight:500;color:var(--ink)}
+.pills{display:flex;flex-wrap:wrap;gap:6px}
+.pill{display:inline-flex;align-items:center;gap:6px;height:26px;padding:0 6px 0 10px;border-radius:4px;background:var(--accent-soft);color:var(--ink);border:1px solid transparent;font-size:12.5px;cursor:pointer}
+.pill:hover{border-color:var(--accent)}
+.pill svg{width:12px;height:12px;stroke:currentColor}
+
+/* Table */
+.tablewrap{background:var(--surface);border:1px solid var(--line);border-radius:8px;overflow-x:auto}
+table.spec{width:100%;border-collapse:collapse;min-width:900px}
+.spec th{position:sticky;top:0;background:var(--surface-2);text-align:left;font-family:var(--f-display);font-weight:600;font-size:11.5px;letter-spacing:.07em;text-transform:uppercase;color:var(--ink-2);padding:10px 12px;border-bottom:1px solid var(--line-strong);white-space:nowrap}
+.spec td{padding:11px 12px;border-bottom:1px solid var(--line);vertical-align:top}
+.spec tbody tr{cursor:pointer}
+.spec tbody tr:hover td{background:var(--surface-2)}
+.spec tbody tr.sel td{background:var(--accent-soft)}
+.spec tbody tr:last-child td{border-bottom:0}
+.cb{width:34px;padding-right:0!important}
+.cb input{width:15px;height:15px;accent-color:var(--accent);margin:2px 0 0}
+.pn{font-family:var(--f-mono);font-weight:500;font-size:13.5px;color:var(--ink);white-space:nowrap}
+.brand{font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);display:block;margin-bottom:1px}
+.pdesc{display:block;color:var(--muted);font-size:12.5px;margin-top:2px;max-width:46ch}
+.fnc{display:inline-flex;align-items:center;gap:7px;white-space:nowrap;font-size:13px}
+.kcell{min-width:130px}
+.kval{font-family:var(--f-mono);font-size:13px;font-variant-numeric:tabular-nums;white-space:nowrap}
+.kval.na{color:var(--muted)}
+.kbar{height:4px;background:var(--bar-track);border-radius:2px;margin-top:5px;width:100px}
+.kbar i{display:block;height:100%;background:var(--bar);border-radius:2px}
+.tag{display:inline-block;font-size:11.5px;padding:1px 6px;border:1px solid var(--line-strong);border-radius:3px;color:var(--ink-2);margin:0 4px 4px 0;white-space:nowrap}
+.mono{font-family:var(--f-mono);font-size:12.5px}
+.muted{color:var(--muted)}
+
+/* Cards */
+.cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:12px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:14px 16px 14px;display:flex;flex-direction:column;gap:8px;cursor:pointer;position:relative;text-align:left}
+.card:hover{border-color:var(--line-strong)}
+.card.sel{border-color:var(--accent);box-shadow:inset 0 0 0 1px var(--accent)}
+.card .top{display:flex;justify-content:space-between;align-items:flex-start;gap:10px}
+.card .fnc{font-size:11.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-2)}
+.card h2{margin:0;font-family:var(--f-mono);font-weight:500;font-size:15px}
+.card p{margin:0;color:var(--muted);font-size:13px;flex:1}
+.card dl{display:grid;grid-template-columns:auto 1fr;gap:3px 12px;margin:4px 0 0;font-size:12.5px;border-top:1px solid var(--line);padding-top:8px}
+.card dt{color:var(--muted)} .card dd{margin:0;font-variant-numeric:tabular-nums}
+.card .cb input{margin:0}
+
+.tds{display:inline-block;margin-top:6px;font-size:12px;font-weight:500;color:var(--accent);text-decoration:none;border:1px solid var(--accent);border-radius:4px;padding:1px 7px}
+.tds:hover{background:var(--accent);color:var(--accent-ink)}
+.card-links{display:flex;gap:6px;flex-wrap:wrap}
+.empty{padding:48px 24px;text-align:center;color:var(--ink-2);background:var(--surface);border:1px dashed var(--line-strong);border-radius:8px}
+
+/* Drawer */
+.scrim{position:fixed;inset:0;background:rgba(10,16,22,.42);opacity:0;pointer-events:none;transition:opacity .18s;z-index:20}
+.scrim.open{opacity:1;pointer-events:auto}
+.drawer{position:fixed;top:0;right:0;height:100%;width:min(520px,100%);background:var(--surface);box-shadow:var(--shadow);transform:translateX(102%);transition:transform .22s ease;z-index:21;display:flex;flex-direction:column}
+.drawer.wide{width:min(900px,100%)}
+.drawer.open{transform:none}
+.dr-head{padding:18px 22px 14px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;gap:12px;align-items:flex-start}
+.dr-head h2{margin:2px 0 0;font-family:var(--f-mono);font-weight:500;font-size:19px}
+.dr-body{padding:18px 22px;overflow:auto;flex:1}
+.dr-foot{padding:14px 22px;border-top:1px solid var(--line);display:flex;gap:10px;justify-content:flex-end;flex-wrap:wrap}
+.iconbtn{width:32px;height:32px;border:1px solid var(--line-strong);border-radius:6px;background:transparent;cursor:pointer;display:grid;place-items:center;flex:none}
+.iconbtn svg{width:16px;height:16px;stroke:currentColor}
+.lead{margin:0 0 16px;color:var(--ink-2);max-width:60ch}
+.kv{width:100%;border-collapse:collapse;font-size:13.5px}
+.kv th{text-align:left;font-weight:500;color:var(--muted);padding:9px 12px 9px 0;border-bottom:1px solid var(--line);width:40%;vertical-align:top}
+.kv td{padding:9px 0;border-bottom:1px solid var(--line);vertical-align:top;font-variant-numeric:tabular-nums}
+.cmp{width:100%;border-collapse:collapse;font-size:13px;min-width:560px}
+.cmp th,.cmp td{padding:9px 12px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top}
+.cmp thead th{font-family:var(--f-mono);font-weight:500;font-size:13.5px;border-bottom:1px solid var(--line-strong);background:var(--surface-2)}
+.cmp tbody th{font-weight:500;color:var(--muted);width:160px;white-space:nowrap}
+.cmp td.best{font-weight:600}
+.btn{height:36px;padding:0 14px;border-radius:6px;border:1px solid var(--line-strong);background:var(--surface);cursor:pointer;font-size:13.5px;text-decoration:none;display:inline-flex;align-items:center;gap:6px;color:var(--ink)}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+
+/* Compare tray */
+.tray{position:fixed;left:50%;bottom:16px;transform:translate(-50%,140%);background:var(--mast);color:var(--mast-ink);border-radius:8px;box-shadow:var(--shadow);padding:10px 12px 10px 16px;display:flex;align-items:center;gap:14px;z-index:15;transition:transform .2s ease;max-width:calc(100% - 32px);flex-wrap:wrap}
+.tray.show{transform:translate(-50%,0)}
+.tray .items{display:flex;gap:6px;flex-wrap:wrap}
+.tray .it{font-family:var(--f-mono);font-size:12px;background:rgba(255,255,255,.1);padding:3px 8px;border-radius:4px}
+.tray .hint{font-size:12px;color:var(--mast-muted)}
+.tray .btn{height:32px}
+.tray .btn.ghost{background:transparent;color:var(--mast-ink);border-color:rgba(255,255,255,.25)}
+
+footer{max-width:1360px;margin:0 auto;padding:0 24px 40px;color:var(--muted);font-size:12px;line-height:1.6}
+footer p{max-width:110ch;margin:0}
+footer a{color:var(--accent)}
+.sources{border-top:1px solid var(--line);padding-top:18px;margin-bottom:16px}
+.sources h2{font-family:var(--f-display);font-weight:600;font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-2);margin:0 0 8px}
+.sources ol{margin:0;padding-left:20px;display:flex;flex-direction:column;gap:4px;font-size:12.5px}
+.sources li span{color:var(--muted)}
+.sources li > span::before{content:" · "}
+</style>
+</head>
+<body>
+
+<header class="mast">
+  <div class="mast-in">
+    <div>
+      <p class="eyebrow">Electronics materials · Product selector</p>
+      <h1>Dow materials for electronics</h1>
+      <p class="sub">Search Dow's electronics catalogue of DOWSIL™, SYLGARD™ and SILASTIC™ silicones, thermal materials, heat transfer fluids and surface-prep products. Filter by function, cure, thermal conductivity and Dow submarket, then compare candidates side by side.</p>
+    </div>
+    <div class="mast-right">
+    <p class="upd-note">Updated automatically once a month</p>
+    <svg class="logo" role="img" aria-label="DGE Specialty Chemicals" viewBox="0 0 555 161" fill="none" xmlns="http://www.w3.org/2000/svg">
+<path d="M278.737 89.2611C285.3 83.1228 288.577 74.1841 288.566 62.4448C288.556 50.7056 285.28 41.6841 278.737 35.3804C272.195 29.0665 262.149 25.9095 248.599 25.9095H233.654V98.4841H250.568C262.753 98.4841 272.117 95.384 278.66 89.1836M298.225 18.2366C309.594 28.6531 315.279 43.1205 315.279 61.6387C315.279 80.157 309.729 94.8466 298.628 105.707C287.538 116.61 270.608 122.061 247.839 122.061H207.019V2.70483H249.281C270.572 2.70483 286.913 7.91307 298.303 18.3296" fill="currentColor"/>
+<path d="M415.899 61.2529H442.72V103.617C430.876 116.823 414.458 123.427 393.466 123.427C375.895 123.427 361.178 117.619 349.312 106.004C337.447 94.3884 331.52 79.7505 331.53 62.09C331.53 44.3881 337.592 29.6159 349.715 17.7733C355.464 12.0139 362.315 7.47238 369.859 4.42022C377.402 1.36806 385.484 -0.132099 393.621 0.00939827C410.117 -0.227363 426.085 5.81855 438.286 16.9207L424.473 36.8392C420.124 32.8149 415.13 29.5504 409.698 27.1822C405.038 25.3979 400.084 24.504 395.094 24.5471C390.348 24.4407 385.629 25.3011 381.226 27.0759C376.823 28.8507 372.828 31.5027 369.482 34.8706C362.537 41.7736 359.064 50.8571 359.064 62.1209C359.064 73.3848 362.392 82.4063 369.048 89.1853C372.103 92.4196 375.795 94.9871 379.89 96.7263C383.986 98.4656 388.397 99.3391 392.846 99.2918C402.076 99.2918 409.76 97.5299 415.899 94.006V61.2529Z" fill="currentColor"/>
+<path d="M554.435 2.69092V26.4226L493.104 26.4228V51.0071H546.575V73.7312H493.104V98.4859H554.435V122.063H466.469V2.69114L554.435 2.69092Z" fill="currentColor"/>
+<path d="M210.573 160.299C209.294 159.965 208.089 159.397 207.019 158.624L208.591 155.153C209.523 155.809 210.549 156.318 211.635 156.664C212.777 157.031 213.968 157.223 215.168 157.235C216.177 157.302 217.185 157.097 218.089 156.643C218.372 156.495 218.609 156.271 218.774 155.998C218.94 155.724 219.028 155.411 219.028 155.091C219.034 154.865 218.987 154.64 218.891 154.434C218.795 154.229 218.654 154.048 218.477 153.907C218.057 153.559 217.57 153.302 217.047 153.151C216.275 152.901 215.491 152.689 214.698 152.518C213.431 152.235 212.183 151.874 210.961 151.436C209.99 151.079 209.126 150.482 208.448 149.7C207.72 148.795 207.349 147.654 207.407 146.494C207.398 145.373 207.733 144.275 208.367 143.349C209.06 142.335 210.042 141.553 211.185 141.103C212.665 140.516 214.25 140.238 215.842 140.286C217.102 140.282 218.357 140.433 219.58 140.736C220.703 141.005 221.777 141.446 222.766 142.043L221.336 145.555C219.66 144.557 217.752 144.015 215.801 143.983C214.806 143.907 213.812 144.128 212.942 144.616C212.655 144.786 212.417 145.028 212.253 145.318C212.088 145.608 212.002 145.936 212.002 146.27C212.004 146.605 212.108 146.932 212.302 147.206C212.495 147.48 212.769 147.688 213.085 147.801C214.139 148.234 215.234 148.562 216.353 148.781C217.618 149.07 218.866 149.432 220.09 149.864C221.047 150.226 221.902 150.815 222.582 151.579C223.313 152.467 223.685 153.596 223.623 154.744C223.629 155.859 223.294 156.949 222.664 157.868C221.946 158.877 220.954 159.657 219.804 160.115C218.324 160.7 216.739 160.978 215.148 160.932C213.6 160.938 212.06 160.725 210.573 160.299Z" fill="currentColor"/>
+<path d="M240.165 141.506C241.394 142.023 242.44 142.898 243.167 144.017C243.861 145.178 244.228 146.504 244.228 147.857C244.228 149.209 243.861 150.535 243.167 151.696C242.446 152.82 241.398 153.696 240.165 154.207C238.706 154.826 237.132 155.126 235.549 155.085H231.464V160.599H226.848V140.628H235.487C237.092 140.578 238.688 140.877 240.165 141.506ZM238.469 150.409C238.812 150.076 239.085 149.678 239.271 149.237C239.457 148.797 239.553 148.324 239.553 147.846C239.553 147.368 239.457 146.895 239.271 146.455C239.085 146.015 238.812 145.617 238.469 145.284C237.555 144.617 236.432 144.299 235.304 144.385H231.525V151.308H235.304C236.414 151.373 237.512 151.048 238.408 150.389L238.469 150.409Z" fill="currentColor"/>
+<path d="M262.979 156.887V160.604H247.518V140.633H262.632V144.267H252.134V148.597H261.407V152.191H252.134V156.826L262.979 156.887Z" fill="currentColor"/>
+<path d="M270.801 159.601C269.19 158.761 267.846 157.488 266.921 155.925C265.996 154.304 265.51 152.471 265.51 150.606C265.51 148.74 265.996 146.907 266.921 145.286C267.846 143.723 269.19 142.45 270.801 141.61C272.51 140.704 274.422 140.247 276.356 140.283C277.968 140.253 279.567 140.559 281.054 141.182C282.416 141.77 283.62 142.673 284.567 143.816L281.605 146.552C280.997 145.81 280.23 145.213 279.36 144.807C278.491 144.4 277.541 144.194 276.581 144.204C275.426 144.188 274.287 144.469 273.272 145.021C272.317 145.546 271.531 146.332 271.005 147.287C270.449 148.3 270.167 149.44 270.188 150.595C270.162 151.751 270.444 152.893 271.005 153.904C271.524 154.869 272.312 155.663 273.272 156.191C274.289 156.736 275.428 157.01 276.581 156.987C277.544 157.002 278.497 156.796 279.368 156.385C280.239 155.974 281.004 155.37 281.605 154.618L284.567 157.375C283.623 158.53 282.41 159.434 281.033 160.009C279.541 160.639 277.935 160.952 276.315 160.928C274.395 160.959 272.497 160.503 270.801 159.601Z" fill="currentColor"/>
+<path d="M287.632 140.61H292.268V160.601H287.632V140.61Z" fill="currentColor"/>
+<path d="M310.22 156.313H300.927L299.17 160.581H294.432L303.337 140.61H307.891L316.837 160.581H311.976L310.22 156.313ZM308.749 152.801L305.522 145.143L302.356 152.801H308.749Z" fill="currentColor"/>
+<path d="M318.981 140.61H323.597V156.823H333.605V160.601H318.981V140.61Z" fill="currentColor"/>
+<path d="M338.551 144.387H332.076V140.61H349.478V144.387H343.085V160.601H338.469L338.551 144.387Z" fill="currentColor"/>
+<path d="M363.321 153.515V160.601H358.705V153.454L350.965 140.61H355.887L361.217 149.493L366.548 140.61H371.082L363.321 153.515Z" fill="currentColor"/>
+<path d="M383.255 159.601C381.644 158.761 380.3 157.488 379.375 155.925C378.451 154.304 377.965 152.471 377.965 150.606C377.965 148.74 378.451 146.907 379.375 145.286C380.3 143.723 381.644 142.45 383.255 141.61C384.964 140.704 386.876 140.247 388.81 140.283C390.422 140.253 392.022 140.559 393.508 141.182C394.871 141.77 396.074 142.673 397.021 143.816L394.059 146.552C393.451 145.81 392.684 145.213 391.814 144.807C390.945 144.4 389.995 144.194 389.035 144.204C387.88 144.188 386.741 144.469 385.726 145.021C384.771 145.546 383.985 146.332 383.459 147.287C382.903 148.3 382.621 149.44 382.642 150.595C382.616 151.751 382.898 152.893 383.459 153.904C383.978 154.869 384.766 155.663 385.726 156.191C386.743 156.736 387.882 157.01 389.035 156.987C389.998 157.002 390.951 156.796 391.822 156.385C392.693 155.974 393.458 155.37 394.059 154.618L397.021 157.375C396.077 158.53 394.864 159.434 393.488 160.009C391.995 160.639 390.389 160.952 388.77 160.928C386.849 160.959 384.951 160.503 383.255 159.601Z" fill="currentColor"/>
+<path d="M418.528 140.61V160.601H413.892V152.433H404.823V160.601H400.187V140.63H404.823V148.512H413.892V140.63L418.528 140.61Z" fill="currentColor"/>
+<path d="M438.789 156.887V160.604H423.308V140.633H438.401V144.267H427.903V148.597H437.176V152.191H427.903V156.826L438.789 156.887Z" fill="currentColor"/>
+<path d="M460.744 160.604V148.637L454.801 158.562H452.758L446.897 148.944V160.604H442.567V140.633H446.447L453.923 153.048L461.275 140.633H465.074V160.604H460.744Z" fill="currentColor"/>
+<path d="M469.835 140.61H474.451V160.601H469.835V140.61Z" fill="currentColor"/>
+<path d="M483.213 159.601C481.602 158.762 480.258 157.488 479.333 155.925C478.397 154.309 477.904 152.474 477.904 150.606C477.904 148.738 478.397 146.903 479.333 145.286C480.258 143.723 481.602 142.45 483.213 141.611C484.921 140.701 486.834 140.244 488.769 140.283C490.373 140.254 491.966 140.56 493.446 141.182C494.815 141.769 496.025 142.672 496.979 143.816L494.018 146.552C493.406 145.813 492.639 145.219 491.77 144.813C490.901 144.407 489.953 144.199 488.993 144.204C487.839 144.188 486.699 144.47 485.685 145.021C484.73 145.547 483.944 146.333 483.418 147.288C482.861 148.3 482.579 149.441 482.601 150.596C482.575 151.751 482.857 152.893 483.418 153.904C483.937 154.869 484.724 155.663 485.685 156.191C486.701 156.736 487.84 157.01 488.993 156.987C489.956 156.999 490.908 156.791 491.778 156.381C492.649 155.971 493.414 155.368 494.018 154.619L496.979 157.375C496.031 158.525 494.819 159.429 493.446 160.01C491.954 160.639 490.347 160.952 488.728 160.928C486.806 160.965 484.908 160.508 483.213 159.601Z" fill="currentColor"/>
+<path d="M512.99 156.313H503.635L501.858 160.581H497.12L506.025 140.61H510.579L519.525 160.581H514.664L512.99 156.313ZM511.519 152.801L508.353 145.143L505.188 152.801H511.519Z" fill="currentColor"/>
+<path d="M521.752 140.61H526.368V156.823H536.314V160.601H521.691L521.752 140.61Z" fill="currentColor"/>
+<path d="M540.907 160.299C539.628 159.965 538.423 159.398 537.353 158.624L538.925 155.153C539.859 155.805 540.885 156.314 541.969 156.664C543.118 157.032 544.316 157.225 545.522 157.235C546.525 157.299 547.525 157.095 548.423 156.643C548.706 156.495 548.943 156.271 549.108 155.998C549.274 155.724 549.362 155.411 549.362 155.091C549.368 154.865 549.321 154.64 549.225 154.435C549.129 154.229 548.988 154.048 548.811 153.907C548.394 153.555 547.906 153.298 547.381 153.151C546.61 152.898 545.826 152.687 545.032 152.518C543.765 152.235 542.517 151.874 541.295 151.436C540.331 151.076 539.475 150.479 538.803 149.7C538.074 148.795 537.704 147.654 537.761 146.494C537.745 145.375 538.073 144.277 538.701 143.35C539.406 142.338 540.393 141.557 541.54 141.103C543.013 140.516 544.591 140.238 546.176 140.286C547.435 140.282 548.691 140.433 549.913 140.736C551.038 141.001 552.113 141.442 553.1 142.043L551.69 145.555C550.007 144.557 548.092 144.015 546.135 143.983C545.14 143.907 544.146 144.128 543.276 144.616C542.991 144.787 542.757 145.03 542.595 145.32C542.434 145.61 542.352 145.938 542.357 146.27C542.353 146.603 542.454 146.93 542.644 147.204C542.834 147.479 543.105 147.687 543.419 147.801C544.473 148.234 545.568 148.562 546.686 148.781C547.953 149.068 549.201 149.429 550.424 149.864C551.385 150.218 552.242 150.808 552.916 151.579C553.647 152.467 554.019 153.596 553.957 154.744C553.973 155.86 553.637 156.953 552.998 157.869C552.28 158.877 551.287 159.657 550.138 160.115C548.658 160.702 547.073 160.98 545.481 160.932C543.934 160.938 542.394 160.725 540.907 160.299Z" fill="currentColor"/>
+<path d="M112.699 149.69C112.351 148.972 111.732 148.423 110.979 148.162C110.225 147.901 109.399 147.95 108.682 148.298C97.8648 153.512 85.7873 155.541 73.8601 154.148C61.9328 152.755 50.6485 147.997 41.3253 140.43C45.497 136.009 47.8291 130.166 47.8477 124.088C47.8663 118.01 45.5701 112.153 41.4256 107.707C37.281 103.26 31.599 100.558 25.5338 100.149C19.4686 99.74 13.4751 101.655 8.77093 105.505C4.06678 109.354 1.00478 114.85 0.206991 120.875C-0.590796 126.901 0.935462 133.004 4.4757 137.945C8.01594 142.886 13.3046 146.294 19.2674 147.477C25.2301 148.66 31.4197 147.529 36.5786 144.314C46.8051 152.913 59.2988 158.374 72.5564 160.04C85.8139 161.706 99.2707 159.507 111.308 153.707C112.025 153.358 112.574 152.739 112.835 151.986C113.096 151.233 113.047 150.407 112.699 149.69Z" fill="currentColor"/>
+<path d="M12.0432 88.0928C12.0299 88.4895 12.0951 88.8848 12.235 89.2562C12.3749 89.6276 12.5868 89.9677 12.8585 90.2571C13.1302 90.5464 13.4563 90.7793 13.8182 90.9423C14.1801 91.1053 14.5706 91.1953 14.9674 91.2071H15.0668C15.8492 91.2034 16.6 90.8984 17.1632 90.3554C17.7264 89.8124 18.0585 89.0732 18.0904 88.2916C18.427 77.7251 21.4092 67.4118 26.7639 58.2958C32.1186 49.1798 39.6748 41.5524 48.7408 36.1119C51.6215 34.3826 54.6288 32.8736 57.7371 31.5979C59.6812 37.2608 63.6842 41.9856 68.9512 44.8343C74.2182 47.683 80.364 48.4471 86.1684 46.975C91.9727 45.5029 97.0112 41.9022 100.283 36.8879C103.555 31.8735 104.822 25.8123 103.831 19.9075C102.841 14.0028 99.6653 8.68649 94.9359 5.01413C90.2064 1.34177 84.2686 -0.418053 78.3015 0.0840882C72.3344 0.586229 66.7743 3.31361 62.7253 7.72469C58.6763 12.1358 56.4344 17.908 56.4448 23.8952C56.4448 24.4915 56.4448 25.0547 56.5111 25.6262C52.7334 27.091 49.0888 28.8783 45.6178 30.9684C35.6972 36.9195 27.4288 45.2645 21.5703 55.2389C15.7117 65.2134 12.4502 76.4983 12.0846 88.0597L12.0432 88.0928Z" fill="currentColor"/>
+<path d="M138.829 100.103C132.964 100.09 127.299 102.23 122.907 106.116C118.514 110.002 115.701 115.364 115 121.186C114.3 127.008 115.76 132.885 119.104 137.702C122.449 142.519 127.445 145.941 133.145 147.321C138.845 148.7 144.854 147.94 150.031 145.184C155.208 142.429 159.194 137.87 161.233 132.372C163.271 126.874 163.222 120.819 161.092 115.355C158.963 109.891 154.903 105.398 149.681 102.728C150.355 98.8022 150.698 94.8265 150.708 90.843C150.724 79.2766 147.839 67.8908 142.318 57.7265C136.798 47.5621 128.817 38.9435 119.105 32.6585C118.774 32.4453 118.404 32.2994 118.016 32.2292C117.629 32.159 117.231 32.1658 116.846 32.2492C116.461 32.3327 116.096 32.4911 115.772 32.7155C115.449 32.9399 115.172 33.2259 114.959 33.5571C114.746 33.8883 114.6 34.2582 114.53 34.6458C114.46 35.0334 114.466 35.431 114.55 35.8159C114.633 36.2009 114.792 36.5656 115.016 36.8893C115.241 37.213 115.527 37.4893 115.858 37.7025C124.734 43.4373 132.028 51.3072 137.073 60.5914C142.119 69.8755 144.753 80.277 144.736 90.843C144.73 94.1319 144.476 97.4157 143.973 100.666C142.284 100.294 140.559 100.105 138.829 100.103Z" fill="currentColor"/>
+</svg>
+    <div class="stats" aria-label="Catalogue summary">
+      <div class="stat"><b id="st-total">0</b><span>Products</span></div>
+      <div class="stat"><b id="st-upd">—</b><span id="st-upd-l">Last updated</span></div>
+    </div>
+    </div>
+  </div>
+</header>
+
+<div class="toolbar">
+  <div class="toolbar-in">
+    <label class="search" for="q">
+      <svg viewBox="0 0 24 24" fill="none" stroke-width="2" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+      <input type="search" id="q" list="feat-list" autocomplete="off" placeholder="Search part numbers, applications or properties, also inside data sheets: shore, hardness, primerless, k>5…" aria-label="Search products by part number, application or property" aria-describedby="q-help">
+      <datalist id="feat-list"></datalist>
+    </label>
+    <label class="docs-opt" for="indocs" id="docs-opt" hidden title="Also look for your words inside Dow's technical data sheets (hardness, Shore, viscosity, standards...)"><input type="checkbox" id="indocs" checked> Search inside data sheets <span id="docs-n"></span></label>
+    <span class="tl-label" id="sort-label">Sort</span>
+    <select id="sort" aria-labelledby="sort-label">
+      <option value="fn">Function</option>
+      <option value="kdesc">Thermal conductivity, high to low</option>
+      <option value="name">Part number, A to Z</option>
+    </select>
+    <div class="seg" role="group" aria-label="View">
+      <button type="button" id="v-table" aria-pressed="true">Table</button>
+      <button type="button" id="v-cards" aria-pressed="false">Cards</button>
+    </div>
+    <div class="try" id="q-help">
+      <span class="try-l">Try</span>
+      <button type="button" data-try="primerless">primerless</button>
+      <button type="button" data-try="UL">UL</button>
+      <button type="button" data-try="MIL">MIL</button>
+      <button type="button" data-try="transparent">transparent</button>
+      <button type="button" data-try="solvent-free">solvent-free</button>
+      <button type="button" data-try="reworkable">reworkable</button>
+      <button type="button" data-try="flame">flame resistant</button>
+      <button type="button" data-try="FIPG">FIPG</button>
+      <button type="button" data-try="EMI">EMI shielding</button>
+      <button type="button" data-try="k>5">k&gt;5</button>
+      <button type="button" data-try="immersion">immersion cooling</button>
+      <span class="try-note">Combine words to narrow: <kbd>potting EV</kbd>, <kbd>black high strength</kbd>, <kbd>gel k&gt;4</kbd></span>
+    </div>
+  </div>
+</div>
+
+<div class="stale" id="stale" hidden><span>Product data was last checked <b id="stale-age">0</b> days ago. It is refreshed automatically each month.</span></div>
+<div class="body">
+  <aside class="facets" id="facets" aria-label="Filters"></aside>
+  <main>
+    <div class="res-head">
+      <div class="count" id="count" aria-live="polite"></div>
+      <div class="pills" id="pills"></div>
+    </div>
+    <div id="results"></div>
+  </main>
+</div>
+
+<footer>
+  <div class="sources">
+    <h2>Sources</h2>
+    <ol>
+      <li><a href="https://www.dow.com/en-us/market/mkt-electronics.html" target="_blank" rel="noopener">Electronics | Dow Inc.</a> <span>Electronics market overview</span></li>
+      <li><a href="https://www.dow.com/en-us/search.html#tab=Products&amp;cf-dow_market_hierarchy=Electronics" target="_blank" rel="noopener">Dow product search: Electronics</a> <span>the 352 products Dow tags for electronics; the selector keeps the electronics materials (process chemicals, polymers and additives excluded), each linked to its own Dow page</span></li>
+      <li>Dow product search by electronics submarket <span>used for the submarket filter: <a href="https://www.dow.com/en-us/search.html#tab=Products&amp;cf-dow_market_hierarchy=Electronics,Consumer%2C%20Computer%20and%20Communications" target="_blank" rel="noopener">Consumer, Computer and Communications</a>, <a href="https://www.dow.com/en-us/search.html#tab=Products&amp;cf-dow_market_hierarchy=Electronics,Transportation%20and%20e-mobility" target="_blank" rel="noopener">Transportation and e-mobility</a>, <a href="https://www.dow.com/en-us/search.html#tab=Products&amp;cf-dow_market_hierarchy=Electronics,Industrial%20Power%20and%20Energy" target="_blank" rel="noopener">Industrial Power and Energy</a>, <a href="https://www.dow.com/en-us/search.html#tab=Products&amp;cf-dow_market_hierarchy=Electronics,Lighting" target="_blank" rel="noopener">Lighting</a>, <a href="https://www.dow.com/en-us/search.html#tab=Products&amp;cf-dow_market_hierarchy=Electronics,Avionics%2C%20Aerospace%20and%20Defense" target="_blank" rel="noopener">Avionics, Aerospace and Defense</a>, <a href="https://www.dow.com/en-us/search.html#tab=Products&amp;cf-dow_market_hierarchy=Electronics,Avionics%2C%20Aerospace%20and%20Defense,Rockets%2C%20Satellites%20and%20Launch%20Equipment" target="_blank" rel="noopener">Rockets, Satellites and Launch Equipment</a>, <a href="https://www.dow.com/en-us/search.html#tab=Products&amp;cf-dow_market_hierarchy=Electronics,MEMS%20Sensors%20and%20Actuators" target="_blank" rel="noopener">MEMS Sensors and Actuators</a>, <a href="https://www.dow.com/en-us/search.html#tab=Products&amp;cf-dow_market_hierarchy=Electronics,Printed%20Circuit%20Boards" target="_blank" rel="noopener">Printed Circuit Boards</a>, <a href="https://www.dow.com/en-us/search.html#tab=Products&amp;cf-dow_market_hierarchy=Electronics,Semiconductors" target="_blank" rel="noopener">Semiconductors</a>, <a href="https://www.dow.com/en-us/search.html#tab=Products&amp;cf-dow_market_hierarchy=Electronics,Displays" target="_blank" rel="noopener">Displays</a>, <a href="https://www.dow.com/en-us/search.html#tab=Products&amp;cf-dow_market_hierarchy=Electronics,Data%20Center%20Cooling" target="_blank" rel="noopener">Data Center Cooling</a></span></li>
+      <li><a href="https://www.dow.com/en-us/market/mkt-electronics/sub-elec-avionics-aerospace-defense.html" target="_blank" rel="noopener">Avionics, Aerospace and Defense | Dow Inc.</a> <span>aerospace submarket page</span></li>
+      <li><a href="https://www.dow.com/en-us/market/mkt-electronics/sub-elec-consumer-computer-comm.html" target="_blank" rel="noopener">Consumer, Computer and Communications | Dow Inc.</a> <span>consumer submarket page</span></li>
+      <li><a href="https://www.dow.com/en-us/product-technology/pt-conductive-materials.html" target="_blank" rel="noopener">Conductive Materials | Dow Inc.</a> <span>thermal and electrically conductive materials</span></li>
+      <li><a href="https://www.dow.com/en-us/product-technology/pt-gels-encapsulants.html" target="_blank" rel="noopener">Gels, Encapsulants and Conformal Coatings | Dow Inc.</a> <span>coatings, gels, encapsulants</span></li>
+      <li><a href="https://www.dow.com/en-us/product-technology/pt-adhesives-sealants/pg-adhesives-adhesives-sealants-electronics.html" target="_blank" rel="noopener">Adhesives &amp; Sealants for Electronics | Dow Inc.</a> <span>RTV and heat-cure adhesives, foams</span></li>
+    </ol>
+  </div>
+  <p>Unofficial selector compiled from the public Dow pages listed above and re-checked automatically every month. Values are typical and for preliminary screening only; they are not specifications. Confirm all properties against the current technical data sheet and consult Dow before qualification. DOWSIL™ and SYLGARD™ are trademarks of The Dow Chemical Company.</p>
+</footer>
+
+<div class="scrim" id="scrim"></div>
+<aside class="drawer" id="drawer" role="dialog" aria-modal="true" aria-labelledby="dr-title"></aside>
+
+<div class="tray" id="tray" aria-live="polite">
+  <div class="items" id="tray-items"></div>
+  <span class="hint" id="tray-hint"></span>
+  <button class="btn primary" type="button" id="tray-cmp">Compare</button>
+  <button class="btn ghost" type="button" id="tray-clr">Clear</button>
+</div>
+
+<script src="products.js"></script>
+<script>
+const URL_TH="https://www.dow.com/en-us/product-technology/pt-conductive-materials.html";
+const URL_GE="https://www.dow.com/en-us/product-technology/pt-gels-encapsulants.html";
+const URL_AD="https://www.dow.com/en-us/product-technology/pt-adhesives-sealants/pg-adhesives-adhesives-sealants-electronics.html";
+const URL_EL="https://www.dow.com/en-us/market/mkt-electronics.html";
+
+const DATA=window.DOW_DATA||{products:[],updated:null,changes:""};
+const P=DATA.products;
+/* Product particularities, taken from the descriptions on Dow's pages. Keyed by a unique part of the product name. */
+const FEAT={}; /* legacy: particularities now live in each product's f array */
+const FKEYS=Object.keys(FEAT);
+function decorate(){P.forEach((p,i)=>{p.i=i;const s=p.n.indexOf(" ");const br=s>0&&/[™®]$/.test(p.n.slice(0,s));p.brand=br?p.n.slice(0,s):"";p.pn=br?p.n.slice(s+1):p.n;
+  const key=FKEYS.find(k=>(p.n+" ").includes(k));p.f=p.f||(key?FEAT[key]:[]);p.ix=null;p.dk=p.n.replace(/[™®]/g,"").replace(/\\_/g,"_").toLowerCase().replace(/\s+/g,"");});}
+decorate();
+
+/* Search: every word must match (AND). Synonyms widen a word; k>5, k>=5 or >5 filter by conductivity. */
+const SYN={clear:["clear","transparent"],transparent:["transparent","clear"],potting:["potting","encapsulant"],pottant:["potting","encapsulant"],
+  fipg:["fipg","formed-in-place"],gasket:["gasket","fipg"],"no-primer":["primerless","self-priming"],primer:["primer","prime coat","primerless","self-priming"],primerless:["primerless","self-priming"],
+  emi:["emi shielding","shielding"],shielding:["shielding"],rtv:["rtv","room temp","moisture"],coating:["coating","conformal"],grease:["grease","compound"],
+  paste:["grease","compound"],tim:["thermal","gap filler","gel","grease"],flame:["flame"],fr:["flame"],ul:["ul recognized","ul and mil"],
+  "1k":["1k","one-part"],"2k":["2k","two-part"],"one-part":["one-part","1k"],"two-part":["two-part","2k"],soft:["soft"],ev:["electric vehicles","ev "],
+  "solvent-free":["solvent-free"],solventless:["solvent-free"],black:["black"],white:["white"],uv:["uv"],pgme:["pgme","dowanol™ pm glycol ether"],pgmea:["pgmea","dowanol™ pma"],lsr:["liquid silicone rubber","lsr"],immersion:["immersion"],coolant:["coolant","heat transfer","cooling"],stripper:["stripper","photoresist removal"]};
+function idx(p){return(" "+[p.n,p.type,p.app,p.d,p.mkt.join(" "),FN[p.fn].l,p.cure,p.cureAlt||"",p.parts==="1K"?"1K one-part":p.parts==="2K"?"2K two-part":"",
+  p.ratio?p.ratio+" mix":"",p.visc||"",p.hard||"",p.temp||"",p.f.join(" ")].join(" ")+" ").toLowerCase();}
+
+function parseQ(raw){
+  const toks=(raw.toLowerCase().match(/"[^"]+"|\S+/g)||[]).map(t=>t.replace(/"/g,""));
+  const words=[];let kmin=null,kmax=null;
+  toks.forEach(t=>{const m=t.match(/^(?:k)?(>=|≥|>|<=|≤|<)(\d+(?:[.,]\d+)?)$/);
+    if(m){const v=parseFloat(m[2].replace(",","."));if(/[<≤]/.test(m[1]))kmax=v;else kmin=v;}else if(t.length)words.push(t);});
+  return{words,kmin,kmax};
+}
+const wordHit=(ix,w)=>(SYN[w]||[w]).some(s=>ix.includes(s));
+Object.assign(SYN,{hardness:["hardness","shore","durometer"],shore:["shore","durometer"],durometer:["durometer","shore","hardness"],
+  viscosity:["viscosity","mpa","cp "],tensile:["tensile"],elongation:["elongation"],dielectric:["dielectric"],"volume resistivity":["volume resistivity"]});
+/* Full text of the technical data sheets (docs.js, rebuilt monthly). Loaded after the page, so the page never waits for it. */
+const nk=n=>n.replace(/[™®]/g,"").replace(/\\_/g,"_").toLowerCase().replace(/\s+/g,"");
+let DOCS={};
+function docText(p){const d=DOCS[p.dk];if(!d)return"";if(d.l===undefined)d.l=d.t.toLowerCase();return d.l;}
+const docHit=(p,w)=>{const t=docText(p);return !!t&&(SYN[w]||[w]).some(s=>t.includes(s.trim()));};
+function docSnippet(p,Q){const d=DOCS[p.dk];if(!d||!Q||!Q.words.length)return"";const t=docText(p);
+  const w=Q.words.find(w=>!wordHit(p.ix||(p.ix=idx(p)),w)&&docHit(p,w))||Q.words.find(w=>docHit(p,w));if(!w)return"";
+  const terms=(SYN[w]||[w]).map(s=>s.trim()).filter(Boolean);let at=-1,len=0;for(const s of terms){const i=t.indexOf(s);if(i>=0&&(at<0||i<at)){at=i;len=s.length;}}
+  if(at<0)return"";const a=Math.max(0,at-70),b=Math.min(d.t.length,at+len+90);
+  const before=d.t.slice(a,at),hit=d.t.slice(at,at+len),after=d.t.slice(at+len,b);
+  return`<span class="dochit"><b>Data sheet</b>${a>0?"…":""}${esc(before)}<mark>${esc(hit)}</mark>${esc(after)}${b<d.t.length?"…":""}</span>`;}
+const featHits=(p,Q)=>p.f.filter(f=>Q.words.some(w=>(SYN[w]||[w]).some(s=>f.toLowerCase().includes(s.trim()))));
+
+const FN={thermal:{l:"Thermal management",c:"--c-thermal"},protection:{l:"Protection",c:"--c-protection"},assembly:{l:"Bonding & sealing",c:"--c-assembly"},conductive:{l:"Electrical conduction",c:"--c-conductive"},prep:{l:"Surface prep & cleaning",c:"--c-prep"},fluids:{l:"Heat transfer & fluids",c:"--c-fluids"}};
+const FN_ORDER=Object.keys(FN);
+function typeOpts(){return[...new Set(P.map(p=>p.type))].sort((a,b)=>{const fa=P.find(p=>p.type===a).fn,fb=P.find(p=>p.type===b).fn;return FN_ORDER.indexOf(fa)-FN_ORDER.indexOf(fb)||a.localeCompare(b);});}
+const FACETS=[
+  {f:"fn",t:"Function",opts:FN_ORDER,lab:v=>FN[v].l},
+  {f:"type",t:"Product type",opts:typeOpts()},
+  {f:"cure",t:"Cure system",opts:["Room temp.","Moisture","Heat","UV","Non-curing"],lab:v=>({"Room temp.":"Room temperature"}[v]||v)},
+  {f:"parts",t:"Components",opts:["1K","2K"],lab:v=>v==="1K"?"One-part (1K)":"Two-part (2K)"},
+  {f:"mkt",t:"Dow electronics submarket",opts:["Consumer, computer & comms","Transportation & e-mobility","Industrial power & energy","Lighting","Aerospace & defense","Space & launch","MEMS sensors & actuators","Printed circuit boards","Semiconductors","Displays","Data center cooling","Electronics (general)"]}
+];
+const vals=(p,f)=>f==="fn"?[p.fn]:f==="type"?[p.type]:f==="cure"?[p.cure,p.cureAlt].filter(Boolean):f==="parts"?[p.parts]:p.mkt;
+const S={docs:true,fn:new Set(),type:new Set(),cure:new Set(),parts:new Set(),mkt:new Set(),q:"",k:0,sort:"fn",view:"table"};
+const cmp=new Set();
+let KMAX=Math.max(1,...P.map(p=>p.k||0));
+const $=id=>document.getElementById(id);
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const kTxt=k=>k==null?"—":k.toFixed(1);
+const cureTxt=p=>p.cureAlt?`${p.cure} / ${p.cureAlt}`:p.cure;
+const partsTxt=p=>p.parts==="1K"?"1K":p.parts==="2K"?"2K":"—";
+const tdsUrl=p=>{if(DOCS[p.dk]&&DOCS[p.dk].pdf)return DOCS[p.dk].pdf;const m=/\/pdp\.[^/]*\.([0-9a-z]+)\.html/i.exec(p.u||"");return m?`https://www.dow.com/en-us/search.html#f-dow_prelatedproduct=${m[1]}&tab=Support&cf-dow_contenttype_hierarchy=Technical%20Data%20Sheet`:null;};
+const tdsLink=(p,cls)=>{const t=tdsUrl(p);return t?`<a class="${cls}" href="${t}" target="_blank" rel="noopener" title="Technical data sheet for ${esc(p.n)} on dow.com">TDS ↗</a>`:"";};
+const sw=fn=>`<span class="sw" style="background:var(${FN[fn].c})"></span>`;
+const X='<svg viewBox="0 0 24 24" fill="none" stroke-width="2.4" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg>';
+
+$("st-total").textContent=P.length;
+
+function showStatus(){const d=new Date(DATA.updated);
+  if(!DATA.updated||isNaN(d)){$("st-upd").textContent="—";return;}
+  $("st-upd").textContent=d.toLocaleDateString("en-GB",{day:"numeric",month:"short",year:"numeric"});
+  $("st-upd-l").textContent="Updated "+d.toLocaleTimeString("en-GB",{hour:"2-digit",minute:"2-digit"});
+  $("st-upd").parentElement.title="Data last checked against dow.com: "+d.toLocaleString("en-GB")+(DATA.changes?"\nLatest changes: "+DATA.changes:"");
+  const age=Math.floor((Date.now()-d)/864e5);$("stale").hidden=!(age>35);$("stale-age").textContent=age;}
+showStatus();
+
+/* facets: built once, counts updated on render */
+const fbox=$("facets");
+function buildFacets(){fbox.innerHTML=FACETS.map(F=>`<div class="facet${F.opts.length>12?" collapsed":""}" data-facet="${F.f}"><h3>${F.t}</h3>${F.opts.map((v,j)=>
+  `<label class="opt${j>=10?" more":""}" for="f-${F.f}-${j}"><input type="checkbox" id="f-${F.f}-${j}" data-f="${F.f}" value="${esc(v)}"><span class="lbl">${F.f==="fn"?sw(v):""}${esc(F.lab?F.lab(v):v)}</span><span class="n" data-n="${F.f}|${esc(v)}"></span></label>`).join("")}${F.opts.length>12?`<button type="button" class="linkbtn more-btn" data-more="${F.f}">Show all ${F.opts.length}</button>`:""}</div>`).join("")+
+ `<div class="facet"><div class="range-row"><h3 style="margin:0">Min. thermal conductivity</h3><output id="kv" for="k">Any</output></div>
+   <input type="range" id="k" min="0" max="10" step="0.5" value="0" aria-label="Minimum thermal conductivity in W/m·K">
+   <div class="ticks"><span>0</span><span>5</span><span>10 W/m·K</span></div></div>
+  <div class="facet" style="border:0"><button class="linkbtn" type="button" id="reset">Clear all filters</button></div>`;}
+buildFacets();
+fbox.addEventListener("click",e=>{const b=e.target.closest("[data-more]");if(!b)return;const box=b.closest(".facet");const c=box.classList.toggle("collapsed");b.textContent=c?`Show all ${box.querySelectorAll(".opt").length}`:"Show fewer";});
+fbox.addEventListener("change",e=>{const t=e.target;if(t.dataset.f){t.checked?S[t.dataset.f].add(t.value):S[t.dataset.f].delete(t.value);render();}});
+fbox.addEventListener("input",e=>{if(e.target.id==="k"){S.k=+e.target.value;render();}});
+function setQ(v){S.q=v.trim();S.Q=S.q?parseQ(S.q):null;render();}
+$("q").addEventListener("input",e=>setQ(e.target.value));
+document.querySelectorAll("[data-try]").forEach(b=>b.addEventListener("click",()=>{const q=$("q");
+  const cur=q.value.trim();const t=b.dataset.try;q.value=cur&&!cur.toLowerCase().split(/\s+/).includes(t.toLowerCase())?cur+" "+t:(cur||t);setQ(q.value);q.focus();}));
+function buildFeatList(){$("feat-list").innerHTML=[...new Set(P.flatMap(p=>p.f))].sort((a,b)=>a.localeCompare(b)).map(f=>`<option value="${esc(f)}"></option>`).join("");}
+buildFeatList();
+$("indocs").addEventListener("change",e=>{S.docs=e.target.checked;render();});
+(function loadDocs(){const sc=document.createElement("script");sc.src="docs.js";
+  sc.onload=()=>{DOCS=(window.DOW_DOCS&&window.DOW_DOCS.docs)||{};const n=Object.keys(DOCS).length;
+    if(n){$("docs-opt").hidden=false;$("docs-n").textContent="("+n+" sheets)";render();}};
+  document.head.appendChild(sc);})();
+$("sort").addEventListener("change",e=>{S.sort=e.target.value;render();});
+fbox.addEventListener("click",e=>{if(e.target.id==="reset")clearAll();});
+["table","cards"].forEach(v=>$("v-"+v).addEventListener("click",()=>{S.view=v;$("v-table").setAttribute("aria-pressed",v==="table");$("v-cards").setAttribute("aria-pressed",v==="cards");render();}));
+
+function clearAll(){FACETS.forEach(F=>S[F.f].clear());S.q="";S.Q=null;S.k=0;$("q").value="";$("k").value=0;fbox.querySelectorAll("input[type=checkbox]").forEach(c=>c.checked=false);render();}
+
+function match(p,skip){
+  for(const F of FACETS){if(F.f===skip)continue;if(S[F.f].size&&!vals(p,F.f).some(v=>S[F.f].has(v)))return false;}
+  if(S.k>0&&!(p.k>=S.k))return false;
+  if(S.Q){if(!p.ix)p.ix=idx(p);if(!S.Q.words.every(w=>wordHit(p.ix,w)||(S.docs&&docHit(p,w))))return false;
+    if(S.Q.kmin!=null&&!(p.k>=S.Q.kmin))return false;if(S.Q.kmax!=null&&!(p.k!=null&&p.k<=S.Q.kmax))return false;}
+  return true;
+}
+
+function hitTags(p){if(!S.Q||!S.Q.words.length)return"";const h=featHits(p,S.Q);const sn=S.docs?docSnippet(p,S.Q):"";
+  return sn+(h.length?`<span class="hits"><span class="hits-l">Matches</span>${h.map(f=>`<mark class="ft">${esc(f)}</mark>`).join("")}</span>`:"");}
+const featTags=p=>p.f.length?p.f.map(f=>`<span class="tag">${esc(f)}</span>`).join(""):'<span class="muted">—</span>';
+
+function render(){
+  // facet counts
+  FACETS.forEach(F=>{const base=P.filter(p=>match(p,F.f));
+    F.opts.forEach(v=>{const n=base.filter(p=>vals(p,F.f).includes(v)).length;const el=fbox.querySelector(`[data-n="${F.f}|${CSS.escape(v)}"]`);
+      el.textContent=n;el.closest(".opt").classList.toggle("zero",n===0&&!S[F.f].has(v));});});
+  $("kv").textContent=S.k>0?`≥ ${S.k.toFixed(1)} W/m·K`:"Any";
+
+  let r=P.filter(p=>match(p));
+  if(S.sort==="kdesc")r.sort((a,b)=>(b.k??-1)-(a.k??-1));
+  else if(S.sort==="name")r.sort((a,b)=>a.pn.localeCompare(b.pn));
+  else r.sort((a,b)=>FN_ORDER.indexOf(a.fn)-FN_ORDER.indexOf(b.fn)||a.i-b.i);
+
+  $("count").innerHTML=`Showing <b>${r.length}</b> of <b>${P.length}</b> products`;
+  // active filter pills
+  const pills=[];
+  FACETS.forEach(F=>S[F.f].forEach(v=>pills.push({l:F.lab?F.lab(v):v,x:()=>{S[F.f].delete(v);fbox.querySelector(`input[data-f="${F.f}"][value="${CSS.escape(v)}"]`).checked=false;}})));
+  if(S.k>0)pills.push({l:`≥ ${S.k.toFixed(1)} W/m·K`,x:()=>{S.k=0;$("k").value=0;}});
+  if(S.q)pills.push({l:`Search: ${S.q}`,x:()=>{S.q="";S.Q=null;$("q").value="";}});
+  const pb=$("pills");pb.innerHTML=pills.map((p,j)=>`<button type="button" class="pill" data-j="${j}" aria-label="Remove filter ${esc(p.l)}">${esc(p.l)}${X}</button>`).join("");
+  pb.querySelectorAll(".pill").forEach(b=>b.onclick=()=>{pills[+b.dataset.j].x();render();});
+
+  const out=$("results");
+  if(!r.length){out.innerHTML=`<div class="empty"><p style="margin:0 0 10px">No products match these filters.</p><button class="btn" type="button" id="e-clr">Clear all filters</button></div>`;$("e-clr").onclick=clearAll;tray();return;}
+
+  if(S.view==="table"){
+    out.innerHTML=`<div class="tablewrap"><table class="spec"><thead><tr>
+      <th class="cb"><span class="sr" style="position:absolute;left:-9999px">Compare</span></th><th>Product</th><th>Function</th><th>Type</th><th>k (W/m·K)</th><th>Cure</th><th>Parts</th><th>Markets</th></tr></thead><tbody>
+      ${r.map(p=>`<tr data-i="${p.i}" class="${cmp.has(p.i)?"sel":""}">
+        <td class="cb"><input type="checkbox" aria-label="Add ${esc(p.pn)} to comparison" data-c="${p.i}" ${cmp.has(p.i)?"checked":""}></td>
+        <td><span class="brand">${esc(p.brand)}</span><span class="pn">${esc(p.pn)}</span><span class="pdesc">${esc(p.d)}</span>${hitTags(p)}${tdsLink(p,"tds")}</td>
+        <td><span class="fnc">${sw(p.fn)}${FN[p.fn].l}</span></td>
+        <td>${esc(p.type)}</td>
+        <td class="kcell"><span class="kval ${p.k==null?"na":""}">${kTxt(p.k)}</span>${p.k!=null?`<div class="kbar"><i style="width:${(p.k/KMAX*100).toFixed(0)}%"></i></div>`:""}</td>
+        <td>${p.cure==="Not stated"&&!p.cureAlt?'<span class="muted">—</span>':esc(cureTxt(p))}</td>
+        <td class="mono">${partsTxt(p)}</td>
+        <td>${p.mkt.slice(0,2).map(m=>`<span class="tag">${esc(m)}</span>`).join("")}${p.mkt.length>2?`<span class="tag muted" title="${esc(p.mkt.slice(2).join(", "))}">+${p.mkt.length-2}</span>`:""}</td></tr>`).join("")}
+      </tbody></table></div>`;
+    out.querySelectorAll("tbody tr").forEach(tr=>tr.addEventListener("click",e=>{if(e.target.closest("input,a"))return;openDetail(P[+tr.dataset.i]);}));
+  }else{
+    out.innerHTML=`<div class="cards">${r.map(p=>`<article class="card ${cmp.has(p.i)?"sel":""}" data-i="${p.i}" tabindex="0" aria-label="${esc(p.n)}">
+      <div class="top"><span class="fnc">${sw(p.fn)}${FN[p.fn].l}</span><span class="cb"><input type="checkbox" aria-label="Add ${esc(p.pn)} to comparison" data-c="${p.i}" ${cmp.has(p.i)?"checked":""}></span></div>
+      <div><span class="brand">${esc(p.brand)}</span><h2>${esc(p.pn)}</h2></div>
+      <p>${esc(p.d)}</p>${hitTags(p)}
+      <dl><dt>Type</dt><dd>${esc(p.type)}</dd><dt>k</dt><dd class="mono">${p.k!=null?kTxt(p.k)+" W/m·K":"—"}</dd><dt>Cure</dt><dd>${esc(cureTxt(p))}</dd><dt>Parts</dt><dd class="mono">${partsTxt(p)}</dd></dl>
+      <div class="card-links">${tdsLink(p,"tds")}<a class="tds" href="${p.u}" target="_blank" rel="noopener">Product page ↗</a></div>
+      </article>`).join("")}</div>`;
+    out.querySelectorAll(".card").forEach(c=>{
+      c.addEventListener("click",e=>{if(e.target.closest("input,a"))return;openDetail(P[+c.dataset.i]);});
+      c.addEventListener("keydown",e=>{if(e.key==="Enter"&&!e.target.closest("input"))openDetail(P[+c.dataset.i]);});
+    });
+  }
+  out.querySelectorAll("input[data-c]").forEach(cb=>cb.addEventListener("change",()=>{
+    const i=+cb.dataset.c;
+    if(cb.checked){if(cmp.size>=3){cb.checked=false;flashHint();return;}cmp.add(i);}else cmp.delete(i);
+    render();
+  }));
+  tray();
+}
+
+/* compare tray */
+let hintT;
+function flashHint(){$("tray-hint").textContent="Compare up to 3 products";clearTimeout(hintT);hintT=setTimeout(tray,1800);}
+function tray(){
+  const t=$("tray");t.classList.toggle("show",cmp.size>0);
+  $("tray-items").innerHTML=[...cmp].map(i=>`<span class="it">${esc(P[i].pn.split(" ")[0])}</span>`).join("");
+  $("tray-hint").textContent=cmp.size<2?"Select at least 2 to compare":`${cmp.size} of 3 selected`;
+  $("tray-cmp").disabled=cmp.size<2;
+}
+$("tray-clr").onclick=()=>{cmp.clear();render();};
+$("tray-cmp").onclick=openCompare;
+
+/* drawer */
+let lastFocus=null;
+const dr=$("drawer"),scrim=$("scrim");
+function openDrawer(html,wide){
+  lastFocus=document.activeElement;dr.innerHTML=html;dr.classList.toggle("wide",!!wide);
+  dr.classList.add("open");scrim.classList.add("open");
+  dr.querySelector("[data-close]").addEventListener("click",closeDrawer);
+  dr.querySelector("[data-close]").focus();
+}
+function closeDrawer(){dr.classList.remove("open");scrim.classList.remove("open");if(lastFocus)lastFocus.focus();}
+scrim.addEventListener("click",closeDrawer);
+document.addEventListener("keydown",e=>{if(e.key==="Escape"&&dr.classList.contains("open"))closeDrawer();});
+const closeBtn='<button class="iconbtn" type="button" data-close aria-label="Close">'+X+'</button>';
+
+function rowsFor(p){return[
+  ["Function",`<span class="fnc">${sw(p.fn)}${FN[p.fn].l}</span>`],
+  ["Product type",esc(p.type)],
+  ["Thermal conductivity",p.k!=null?`<span class="mono">${kTxt(p.k)} W/m·K</span>`:`<span class="muted">Not stated</span>`],
+  ["Cure system",esc(cureTxt(p))],
+  ["Components",p.parts==="1K"?"One-part (1K)":p.parts==="2K"?"Two-part (2K)":`<span class="muted">Not stated</span>`],
+  ["Mix ratio",p.ratio?`<span class="mono">${p.ratio}</span>`:null],
+  ["Viscosity",p.visc?esc(p.visc):null],
+  ["Hardness",p.hard?esc(p.hard):null],
+  ["Operating temperature",p.temp?`<span class="mono">${esc(p.temp)}</span>`:null],
+  ["Typical applications",esc(p.app)],
+  ["Particularities",featTags(p)],
+  ["End markets",p.mkt.map(m=>`<span class="tag">${esc(m)}</span>`).join("")]
+];}
+
+function openDetail(p){
+  const inCmp=cmp.has(p.i);
+  openDrawer(`<div class="dr-head"><div><span class="brand">${esc(p.brand)}</span><h2 id="dr-title">${esc(p.pn)}</h2></div>${closeBtn}</div>
+    <div class="dr-body"><p class="lead">${esc(p.d)}</p>
+      <table class="kv"><tbody>${rowsFor(p).filter(r=>r[1]!==null).map(([a,b])=>`<tr><th scope="row">${a}</th><td>${b}</td></tr>`).join("")}</tbody></table>
+      <p class="muted" style="font-size:12px;margin-top:14px">Typical values from Dow's public product pages. Confirm on the current TDS.</p></div>
+    <div class="dr-foot"><button class="btn" type="button" id="dr-cmp" ${!inCmp&&cmp.size>=3?"disabled":""}>${inCmp?"Remove from comparison":"Add to comparison"}</button>
+      ${tdsUrl(p)?`<a class="btn primary" href="${tdsUrl(p)}" target="_blank" rel="noopener">Technical data sheet ↗</a>`:""}<a class="btn${tdsUrl(p)?"":" primary"}" href="${p.u}" target="_blank" rel="noopener">Product page ↗</a></div>`);
+  $("dr-cmp").onclick=()=>{inCmp?cmp.delete(p.i):cmp.add(p.i);render();openDetail(p);};
+}
+
+function openCompare(){
+  const ps=[...cmp].map(i=>P[i]);
+  const kmax=Math.max(...ps.map(p=>p.k??-1));
+  const attrs=[
+    ["Function",p=>`<span class="fnc">${sw(p.fn)}${FN[p.fn].l}</span>`],
+    ["Product type",p=>esc(p.type)],
+    ["Thermal conductivity",p=>p.k!=null?`<span class="mono">${kTxt(p.k)} W/m·K</span>`:'<span class="muted">—</span>',p=>p.k!=null&&p.k===kmax&&ps.filter(x=>x.k!=null).length>1],
+    ["Cure system",p=>esc(cureTxt(p))],
+    ["Components",p=>`<span class="mono">${partsTxt(p)}</span>`],
+    ["Mix ratio",p=>p.ratio?`<span class="mono">${p.ratio}</span>`:'<span class="muted">—</span>'],
+    ["Viscosity",p=>p.visc?esc(p.visc):'<span class="muted">—</span>'],
+    ["Hardness",p=>p.hard?esc(p.hard):'<span class="muted">—</span>'],
+    ["Operating temperature",p=>p.temp?`<span class="mono">${esc(p.temp)}</span>`:'<span class="muted">—</span>'],
+    ["Typical applications",p=>esc(p.app)],
+    ["Particularities",featTags],
+    ["End markets",p=>p.mkt.map(m=>`<span class="tag">${esc(m)}</span>`).join("")],
+    ["Description",p=>`<span class="muted">${esc(p.d)}</span>`]
+  ];
+  openDrawer(`<div class="dr-head"><div><span class="brand">Side-by-side</span><h2 id="dr-title">Compare ${ps.length} products</h2></div>${closeBtn}</div>
+    <div class="dr-body" style="overflow:auto"><table class="cmp"><thead><tr><th></th>${ps.map(p=>`<th scope="col"><span class="brand">${esc(p.brand)}</span>${esc(p.pn)}</th>`).join("")}</tr></thead>
+    <tbody>${attrs.map(([l,f,best])=>`<tr><th scope="row">${l}</th>${ps.map(p=>`<td class="${best&&best(p)?"best":""}">${f(p)}</td>`).join("")}</tr>`).join("")}</tbody></table></div>
+    <div class="dr-foot">${ps.map(p=>tdsUrl(p)?`<a class="btn" href="${tdsUrl(p)}" target="_blank" rel="noopener">${esc(p.pn.split(" ")[0])} TDS ↗</a>`:`<a class="btn" href="${p.u}" target="_blank" rel="noopener">${esc(p.pn.split(" ")[0])} on dow.com ↗</a>`).join("")}</div>`,true);
+}
+
+
+
+
+render();
+</script>
+</body>
+</html>

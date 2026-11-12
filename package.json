@@ -1,0 +1,8 @@
+{
+  "name": "dow-electronics-selector",
+  "private": true,
+  "type": "module",
+  "scripts": { "refresh": "node scripts/refresh.mjs", "docs": "node scripts/build-docs.mjs" },
+  "dependencies": { "playwright": "1.48.2",
+    "pdfjs-dist": "4.10.38" }
+}
